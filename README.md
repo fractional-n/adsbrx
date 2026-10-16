@@ -26,7 +26,7 @@ Python 製のソフトウェアです。ドングルが無くても、内蔵の�
 | 項目 | 内容 |
 |---|---|
 | ソフト | Python 3.10 以上（Windows / Linux / macOS。Python 3.10〜3.14 で自動テストが通ることを CI で確認済み） |
-| 実機受信 | RTL-SDR ドングル（RTL2832U。R820T / R820T2 / R828D / R860 搭載品が一般的。RTL-SDR Blog V4 と汎用の RTL2838（R820T）で実受信を確認済み）と 1090 MHz 用アンテナ |
+| 実機受信 | RTL-SDR ドングル（RTL2832U。R820T / R820T2 / R828D / R860 搭載品が一般的。RTL-SDR Blog V4 と RTL-SDR Blog V3 で実受信を確認済み）と 1090 MHz 用アンテナ |
 | Windows の場合 | WinUSB ドライバ（Zadig）と `rtlsdr.dll` + `libusb-1.0.dll`（x64） |
 
 ## インストール
