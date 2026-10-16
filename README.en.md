@@ -2,6 +2,8 @@
 
 [日本語](README.md) | **English**
 
+[![CI](https://github.com/fractional-n/adsbrx/actions/workflows/ci.yml/badge.svg)](https://github.com/fractional-n/adsbrx/actions/workflows/ci.yml)
+
 adsbrx receives and decodes 1090 MHz ADS-B (Mode S extended squitter) with an RTL-SDR dongle.
 It provides a **live aircraft table in the terminal**, a **web map**, and **SBS-1 / Beast / raw outputs** (it works with tar1090, Virtual Radar Server and similar tools).
 It is written in Python. Without a dongle you can try everything with the built-in signal simulator and IQ file playback.
@@ -25,7 +27,7 @@ It is written in Python. Without a dongle you can try everything with the built-
 
 | Item | Details |
 |---|---|
-| Software | Python 3.10 or newer (Windows / Linux / macOS). Verified on Windows with Python 3.13 and 3.14 |
+| Software | Python 3.10 or newer (Windows / Linux / macOS). The automated tests pass on Python 3.10–3.14 in CI |
 | Real reception | An RTL-SDR dongle (RTL2832U; R820T / R820T2 / R828D / R860 tuners are common; real reception was verified with an RTL-SDR Blog V4 and a generic RTL2838 (R820T)) and a 1090 MHz antenna |
 | On Windows | The WinUSB driver (Zadig) and `rtlsdr.dll` + `libusb-1.0.dll` (x64) |
 

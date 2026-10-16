@@ -16,4 +16,4 @@ First public release.
 - Outputs: dump1090-compatible JSON, SBS-1 (30003), Beast (30005) and raw AVR (30002).
 - Terminal aircraft table (`-i`), `--stats`, and `--record FILE` to save the raw IQ while receiving.
 - Tools for testing without hardware: `adsbrx simulate`, `adsbrx decode`, and a weak-signal benchmark (`python -m adsbrx.sim.bench`).
-- Automated tests (about 485).
+- Automated tests (about 485), run by GitHub Actions on Linux, Windows and macOS with Python 3.10–3.14.
