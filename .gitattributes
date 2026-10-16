@@ -1,0 +1,13 @@
+# Normalise text to LF in the repository and in every checkout.
+* text=auto eol=lf
+
+# Vendored Leaflet files are stored byte for byte as distributed.
+src/adsbrx/static/vendor/leaflet.js -text
+src/adsbrx/static/vendor/leaflet.css -text
+
+# Binary files
+*.png binary
+*.cu8 binary
+*.cs8 binary
+*.cs16 binary
+*.bin binary

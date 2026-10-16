@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADS-B レシーバー</title>
+<link rel="stylesheet" href="/static/vendor/leaflet.css">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header id="bar">
+  <h1 data-i18n="app.title">ADS-B レシーバー</h1>
+  <div id="summary" aria-live="off">
+    <span id="link" class="dot off" title="接続状態" data-i18n-title="link.title"></span>
+    <span><span data-i18n="summary.aircraft">航空機</span> <b id="st-aircraft">-</b></span>
+    <span><span data-i18n="summary.located">位置あり</span> <b id="st-located">-</b></span>
+    <span><span data-i18n="summary.rate">受信</span> <b id="st-rate">-</b> msg/s</span>
+    <span title="直近 10 秒に復号したフレームの平均信号強度 (dBFS)" data-i18n-title="summary.signalTip"><span data-i18n="summary.signal">受信レベル</span> <b id="st-signal" class="lv">-</b> dBFS</span>
+    <span title="ノイズレベル: フレームの無い部分を含む全サンプルから推定した雑音電力 (dBFS)" data-i18n-title="summary.noiseTip"><span data-i18n="summary.noise">ノイズ</span> <b id="st-noise" class="lv">-</b> dBFS</span>
+    <span><span data-i18n="summary.range">最大距離</span> <b id="st-range">-</b></span>
+  </div>
+  <div id="controls">
+    <label><span data-i18n="ctl.units">単位</span>
+      <select id="opt-units">
+        <option value="aviation" data-i18n="ctl.units.aviation">航空 (ft / kt / NM)</option>
+        <option value="metric" data-i18n="ctl.units.metric">メートル法 (m / km/h / km)</option>
+      </select>
+    </label>
+    <label><span data-i18n="ctl.trails">軌跡</span>
+      <select id="opt-trails">
+        <option value="selected" data-i18n="ctl.trails.selected">選択中のみ</option>
+        <option value="all" data-i18n="ctl.trails.all">すべて</option>
+        <option value="off" data-i18n="ctl.trails.off">なし</option>
+      </select>
+    </label>
+    <label><span data-i18n="ctl.tiles">地図</span>
+      <select id="opt-tiles">
+        <option value="osm">OpenStreetMap</option>
+        <option value="none" data-i18n="ctl.tiles.none">背景なし</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" id="opt-labels" checked><span data-i18n="ctl.labels">ラベル</span></label>
+    <button type="button" id="btn-fit" data-i18n="ctl.fit">全体表示</button>
+    <label><span data-i18n="ctl.lang">言語</span>
+      <select id="opt-lang" title="言語 / Language">
+        <option value="ja">日本語</option>
+        <option value="en">English</option>
+      </select>
+    </label>
+  </div>
+</header>
+
+<div id="alert" hidden></div>
+
+<main>
+  <div id="map" role="application" aria-label="航空機の位置を示す地図" data-i18n-aria-label="map.label"></div>
+  <aside id="side">
+    <section id="detail" hidden>
+      <header>
+        <h2 id="d-title">-</h2>
+        <button type="button" id="d-close" title="選択を解除 (Esc)" aria-label="選択を解除" data-i18n-title="detail.close.title" data-i18n-aria-label="detail.close.label">×</button>
+      </header>
+      <dl id="d-list"></dl>
+    </section>
+    <details id="levels" open>
+      <summary data-i18n="levels.title">受信レベルとノイズ</summary>
+      <div class="lv-body">
+        <div class="meter">
+          <span class="name" data-i18n="levels.signal">受信</span>
+          <div class="bar" title="受信フレームの平均信号強度。白い線は直近のピーク" data-i18n-title="levels.signalTip">
+            <i id="lv-signal-fill" class="fill signal"></i>
+            <i id="lv-peak-mark" class="peak" hidden></i>
+          </div>
+          <b id="lv-signal">-</b>
+        </div>
+        <div class="meter">
+          <span class="name" data-i18n="levels.noise">ノイズ</span>
+          <div class="bar" title="フレームの無い部分を含む全サンプルから推定した雑音電力" data-i18n-title="levels.noiseTip">
+            <i id="lv-noise-fill" class="fill noise"></i>
+          </div>
+          <b id="lv-noise">-</b>
+        </div>
+        <div class="scale" aria-hidden="true">
+          <span>-60</span><span>-50</span><span>-40</span><span>-30</span><span>-20</span><span>-10</span><span>0</span>
+        </div>
+        <p class="lv-info" title="S/N = 受信レベル − ノイズレベル。パルスだけの S/N より最大 3 dB ほど低く出ます (フレームの約半分は無信号のため)" data-i18n-title="levels.snrTip">
+          S/N <b id="lv-snr">-</b> dB · <span data-i18n="levels.peak">ピーク</span> <b id="lv-peak">-</b> dBFS · <b id="lv-count">0</b> msg / <span id="lv-window">10</span> <span data-i18n="levels.seconds">秒</span>
+        </p>
+        <canvas id="lv-chart" role="img" aria-label="受信レベルとノイズの推移" data-i18n-aria-label="levels.chart"></canvas>
+        <p class="lv-legend">
+          <span class="swatch signal"></span><span data-i18n="levels.legendSignal">受信(平均)</span>
+          <span class="swatch peak"></span><span data-i18n="levels.peak">ピーク</span>
+          <span class="swatch noise"></span><span data-i18n="levels.noise">ノイズ</span>
+          <span class="lv-span" data-i18n="levels.span">直近 5 分</span>
+        </p>
+        <p class="lv-note" data-i18n="levels.note">0 dBFS は ADC のフルスケールです。アンテナ位置や電源ノイズの対策後に「ノイズ」が下がるか、S/N が開くかを見てください。</p>
+      </div>
+    </details>
+    <div id="filters">
+      <input id="filter" type="search" placeholder="ICAO・便名・スコーク" data-i18n-placeholder="filter.placeholder" autocomplete="off" spellcheck="false">
+      <label class="check"><input type="checkbox" id="only-pos"><span data-i18n="filter.onlyPos">位置あり</span></label>
+    </div>
+    <div id="table-wrap">
+      <table id="list">
+        <thead>
+          <tr>
+            <th data-key="hex"><span data-i18n="col.hex">ICAO</span><small></small></th>
+            <th data-key="flight"><span data-i18n="col.flight">便名</span><small></small></th>
+            <th data-key="alt" class="num"><span data-i18n="col.alt">高度</span><small data-unit="alt"></small></th>
+            <th data-key="gs" class="num"><span data-i18n="col.gs">速度</span><small data-unit="speed"></small></th>
+            <th data-key="track" class="num"><span data-i18n="col.track">方位</span><small></small></th>
+            <th data-key="vrate" class="num"><span data-i18n="col.vrate">昇降</span><small data-unit="vrate"></small></th>
+            <th data-key="dist" class="num"><span data-i18n="col.dist">距離</span><small data-unit="dist"></small></th>
+            <th data-key="rssi" class="num"><span data-i18n="col.rssi">信号</span><small>dBFS</small></th>
+            <th data-key="seen" class="num"><span data-i18n="col.seen">受信</span><small data-i18n="col.seenUnit">秒前</small></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="empty" hidden data-i18n="empty.none">航空機はまだ受信されていません。アンテナとゲインを確認してください。</p>
+    </div>
+  </aside>
+</main>
+
+<noscript><p class="noscript">このページの表示には JavaScript が必要です。<br>This page requires JavaScript.</p></noscript>
+<script src="/static/vendor/leaflet.js"></script>
+<script src="/static/i18n.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
