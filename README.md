@@ -1,4 +1,4 @@
-# adsbrx — RTL-SDR ADS-B 受信ソフト
+# adsbrx — RTL-SDR ADS-B 受信アプリ
 
 **日本語** | [English](README.en.md)
 
